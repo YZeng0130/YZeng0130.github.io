@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        /* @font-face {
+            font-family: 'milo-smallcaps-rg';
+            src: url('fonts/milo-smallcaps-rg.woff2');
+        } */
+
+        @font-face {
+            font-family: 'milo-primary-subset-rg';
+            src: url('fonts/milo-primary-subset-rg.woff2');
+        }
+
+        .title {
+            font-size: 1.2em;
+            font-weight: 900;
+        }
+
+        .content {
+            font-family: 'milo-primary-subset-rg', sans-serif;
+            font-size: 1.0em;
+        }
+
+        .note {
+            font-family: 'milo-primary-subset-rg', sans-serif;
+            font-size: 0.6em;
+            color: gray;
+            text-align: right;
+        }
+
+        .description {
+            font-family: 'milo-primary-subset-rg', sans-serif;
+            font-size: 0.8em;
+            color: #888888;
+        }
+
+        .chart {
+            height: 60vh;
+            z-index: 100;
+            overflow: visible;
+        }
+
+        .main>* {
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 main">
+                <h3 class="text-center">维基百科健康数据显示：美国成最“致命”的发达国家</h3>
+                <p class="description">英文维基百科词条揭示健康趋势：美国超额死亡率骤增。青少年及工作场所死亡问题日益突出。</p>
+                <hr />
+                <p class="description">我利用类别分析的研究方法，以维基百科的类别作为数据源来调查美国的主要健康问题。下图是页面和子页面的关系网络图，圆圈 ● 代表文章，正方形■代表类别，圆圈的大小代表该文章的总视图，连接线代表归属关系。</p>
+                <div id="chart_relation" class="chart"></div>
+                <div id="chart_diff" class="chart" style="margin-top: 60px; height: 30vh;">
+                    <div id="chart_diff_0" style="width: 45%; height: 100%; float: left;"></div>
+                    <div id="chart_diff_1" style="width: 45%; height: 100%; float: right;"></div>
+                </div>
+                <p class="title">日益严重的职业安全问题</p>
+                <p class="content">2021年至2022年，在英文维基百科“健康”相关的子页面中，浏览量最高的词条是“电影《铁锈》片场枪击事件”。这一意外事件引发了大众对职业安全领域的关注，在英文维基百科“健康”相关的页面中，阅读量最高的50个词条中有8个与“职业与工作场所健康”相关。据《经济学人》数据显示，2021年，有5000多名美国人死于工作场所事故，而英国则为123人。频发的工作场所意外已经让美国成为最缺乏职业安全保障的发达国家。</p>
+                <p class="title">美国的儿童和青少年死亡率危机</p>
+                <p class="content">作为全球知名网络百科全书，维基百科词条浏览量的变化往往能够反映某一领域的趋势。在2023年，英文维基百科“健康”子页面中浏览量最高增长的是“被允许的自杀”。该词条指一个以公开鼓励自杀及其方法为特色的互联网论坛。而从《经济学人》发布的超额死亡数据中，可以明显看到美国的超额死亡率正在上升。</p>
+                <p class="content">据《纽约时报》数据显示，2020年欧盟的4.4亿人口中有5800例超额死亡，而同年美国的3.3亿人口中这一数字高达6.8万。这一数字在2021年进一步攀升至80,000，到2022年再次增加至107,000。尽管大众可能默认这种死亡率的上升与老年人和中年男子面临的所谓“绝望死亡”有关，但根据最新数据，真相可能并非如此。最具备说服力的数据莫过于美国儿童和青少年的过早死亡率呈现异常上升。</p>
+                <p class="content">虽然2020年以来青少年死亡率显著上升，但新冠病毒在这些死亡中所起的作用微乎其微。 在这场为期三年的公共卫生危机中，新冠病毒导致的死亡人数仅占美国儿童和青少年死亡人数的 2%。暴力导致的青少年死亡人数几乎占死亡率增长的一半。根据JAMA Network Open上1月份发表的分析，凶杀占该群体死亡人数的6.9%。自杀占6.8%。车祸和意外药物过量占18.4%。</p>
+            </div>
+        </div>
+    </div>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="data_for_visualization_2.js"></script>
+    <script>
+        function draw_relation() {
+            let myChart = echarts.init(document.getElementById('chart_relation'));
+
+            let display_threshold = 0;
+            let label_show_threshold = 1000000000000;
+            let graph = {
+                nodes: [],
+                links: [],
+                categories: [],
+            }
+            let category_idx = {};
+
+            let disable_categories = [
+                "Sexual_health",
+                "Health_stubs",
+                "People_in_health_professions",
+                "Health_research",
+                "Health_related_lists",
+                "Health_by_individual",
+                "Race_and_health",
+                "Quality_of_life",
+                "Alcohol_and_health",
+                "Health_activism",
+                "Health_effects_by_subjects",
+                "Health_paradox",
+                "Animal_health",
+                "Region_and_health",
+                "Physical_fitness",
+                "Health_and_sports",
+                "Education_and_health",
+                "Health_and_transport",
+                "Health_and_military",
+                "Health_and_video_gaming",
+            ];
+
+            for (let category in data_for_visualization.category_relation_parent) {
+                if (!category_idx.hasOwnProperty(category)) {
+                    category_idx[category] = Object.keys(category_idx).length;
+                    graph.nodes.push({
+                        id: category_idx[category],
+                        name: category,
+                        symbolSize: 20,
+                        symbol: "rect",
+                        value: 0,
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{b}'
+                        },
+                        draggable: true,
+                        category: category_idx[category],
+                    });
+                    graph.categories.push({ name: category });
+                }
+                for (let sub_category of data_for_visualization.category_relation_parent[category]) {
+                    if (disable_categories.includes(sub_category)) {
+                        continue;
+                    }
+                    if (!category_idx.hasOwnProperty(sub_category)) {
+                        category_idx[sub_category] = Object.keys(category_idx).length;
+                        graph.nodes.push({
+                            id: category_idx[sub_category],
+                            name: sub_category,
+                            symbolSize: 20,
+                            symbol: "rect",
+                            value: 0,
+                            label: {
+                                show: true,
+                                position: 'right',
+                                formatter: '{b}'
+                            },
+                            draggable: true,
+                            category: category_idx[sub_category],
+                        });
+                        graph.categories.push({ name: sub_category });
+                    }
+                    graph.links.push({
+                        source: category_idx[sub_category],
+                        target: category_idx[category],
+                    });
+                }
+            }
+            let article_idx = Object.keys(category_idx).length;
+            for (let title in data_for_visualization.data) {
+                if (data_for_visualization.data[title].sum < display_threshold) {
+                    continue;
+                }
+                let has_link = false;
+                for (let category of data_for_visualization.title_to_category_list[title]) {
+                    if (disable_categories.includes(category)) {
+                        continue;
+                    }
+                    has_link = true;
+                    graph.links.push({
+                        source: article_idx,
+                        target: category_idx[category],
+                    })
+                }
+                if (has_link) {
+                    graph.nodes.push({
+                        id: article_idx,
+                        name: title,
+                        symbolSize: Math.log(data_for_visualization.data[title].sum + 1),
+                        value: data_for_visualization.data[title].sum,
+                        label: {
+                            show: data_for_visualization.data[title].sum > label_show_threshold,
+                            position: 'right',
+                            formatter: '{b} : {c}'
+                        },
+                        draggable: true,
+                        category: category_idx[data_for_visualization.title_to_category_list[title][0]]
+                    });
+                    article_idx += 1;
+                }
+            }
+
+            // 指定图表的配置项和数据
+            let option = {
+                tooltip: {},
+                legend: [
+                    {
+                        show: false,
+                        data: graph.categories.map(function (a) {
+                            return a.name;
+                        }),
+                        orient: "vertical",
+                        align: "left",
+                        left: 0,
+                        icon: "circle",
+                        itemGap: 0,
+                        itemWidth: 14,
+                        itemHeight: 14,
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Relation',
+                        type: 'graph',
+                        layout: 'force',
+                        data: graph.nodes,
+                        links: graph.links,
+                        categories: graph.categories,
+                        roam: true,
+                        zoom: 0.4,
+                        force: {
+                            repulsion: 50,
+                            gravity: 0.2,
+                        }
+                    }
+                ]
+            };
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(option, true);
+        }
+
+        function draw_diff() {
+
+            let begin_year = 2019;
+            let end_year = 2023;
+
+            let year_index = {};
+            let idx = 0;
+            let xAxis_data = [];
+            for (let year = begin_year; year <= end_year; ++year) {
+                year_index[year.toString()] = {
+                    "begin": data_for_visualization.string_axis.length,
+                    "end": -1,
+                };
+                xAxis_data.push(year.toString());
+            }
+            for (let i = 0; i < data_for_visualization.string_axis.length; ++i) {
+                let year = data_for_visualization.string_axis[i].slice(0, 4);
+                if (year_index.hasOwnProperty(year)) {
+                    if (year_index[year].begin > i) {
+                        year_index[year].begin = i;
+                    }
+                    if (year_index[year].end < i) {
+                        year_index[year].end = i;
+                    }
+                }
+            }
+            {
+                let myChart = echarts.init(document.getElementById(`chart_diff_0`));
+                let articles =  [
+                    "Medical_record",
+                    "Dedovshchina",
+                    "Rust_shooting_incident",
+                ];
+                let option = {
+                    animationThreshold: 3000,
+                    animationDuration: 3000,
+                    title: {
+                        text: `2022年阅读量最高的三篇文章`,
+                        textStyle: {
+                            fontSize: 14,
+                            fontFamily: "milo-primary-subset-rg",
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: [
+                            "Medical_record",
+                            "Dedovshchina",
+                            "Rust_shooting_incident",
+                        ],
+                        axisLabel: {
+                            interval: 0,
+                            width: 80,
+                            overflow: "breakAll"
+                        }
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    grid: {
+                        left: "20%",
+                        right: "10%",
+                        top: "20%",
+                        bottom: "10%",
+                    },
+                    legend: {
+                        data: articles,
+                        orient: 'vertical',
+                        type: "scroll",
+                        top: "15%",
+                        left: "20%",
+                        textStyle: {
+                            color: "gray",
+                            fontSize: 8,
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    series: [
+                        {
+                            type: 'bar',
+                            data: articles.map(title => data_for_visualization.data[title]["value"].slice(year_index["2022"].begin, year_index["2022"].end + 1).reduce((a, b) => a + b, 0)),
+                            colorBy: 'data'
+                        }
+                    ]
+                };
+                console.log(option);
+                myChart.clear();
+                myChart.setOption(option, true);
+            }
+
+            {
+                let myChart = echarts.init(document.getElementById(`chart_diff_1`));
+                let articles =  [
+                    "Sanctioned_Suicide",
+                    "Near-sightedness",
+                    "City_quality_of_life_indices",
+                ];
+                let option = {
+                    animationThreshold: 3000,
+                    animationDuration: 3000,
+                    title: {
+                        text: `2023年阅读量最高的三篇文章`,
+                        textStyle: {
+                            fontSize: 14,
+                            fontFamily: "milo-primary-subset-rg",
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: [
+                            "Sanctioned_Suicide",
+                            "Near-sightedness",
+                            "City_quality_of_life_indices",
+                        ],
+                        axisLabel: {
+                            interval: 0,
+                            width: 80,
+                            overflow: "breakAll"
+                        }
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    grid: {
+                        left: "20%",
+                        right: "10%",
+                        top: "20%",
+                        bottom: "10%",
+                    },
+                    legend: {
+                        data: articles,
+                        orient: 'vertical',
+                        type: "scroll",
+                        top: "15%",
+                        left: "20%",
+                        textStyle: {
+                            color: "gray",
+                            fontSize: 8,
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    series: [
+                        {
+                            type: 'bar',
+                            data: articles.map(title => data_for_visualization.data[title]["value"].slice(year_index["2023"].begin, year_index["2023"].end + 1).reduce((a, b) => a + b, 0)),
+                            colorBy: 'data'
+                        }
+                    ]
+                };
+                myChart.clear();
+                myChart.setOption(option, true);
+            }
+
+        }
+
+        draw_relation();
+        draw_diff();
+
+    </script>
+</body>
+
+</html>
